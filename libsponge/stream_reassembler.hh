@@ -1,10 +1,13 @@
 #ifndef SPONGE_LIBSPONGE_STREAM_REASSEMBLER_HH
 #define SPONGE_LIBSPONGE_STREAM_REASSEMBLER_HH
 
+#include "buffer_string.hh"
 #include "byte_stream.hh"
 
 #include <cstdint>
+#include <list>
 #include <string>
+#include <string_view>
 
 //! \brief A class that assembles a series of excerpts from a byte stream (possibly out of order,
 //! possibly overlapping) into an in-order byte stream.
@@ -12,6 +15,8 @@ class StreamReassembler {
   private:
     // Your code here -- add private members as necessary.
 
+    sponge::BufferStringList _buffer_list{};
+    size_t _top_pointer{};
     ByteStream _output;  //!< The reassembled in-order byte stream
     size_t _capacity;    //!< The maximum number of bytes
 
