@@ -44,13 +44,14 @@ void BufferStringList::push_back(const std::string &target, const size_t index, 
 
     // For upper_right, if original upper_right is equal to list.end(), which means the list doesn't have any left_index
     // greater than current_right. In this case, current_right is greater than upper_right's left. So we should select
-    // the maximum of upper_right's right and current_right as the maximun index.
-    // Exp. Upper_right: [5, 10] current_index [3, 9], 9 is greater the 5, so the right_index should be max(10, 9) = 10.
+    // the maximum of upper_right's right and current_right as the maximum index.
+    // Example: upper_right: [5, 10], current_index [3, 9], 9 is greater than 5, so the right_index should be max(10, 9)
+    // = 10.
     size_t right_index =
         !is_list_end ? buffer.get_index().second : std::max(upper_right->get_index().second, buffer.get_index().second);
 
-    // If current range is totally inside the lower_left rage, there is no need to do the following operation, just skip
-    // it.
+    // If current range is totally inside the lower_left range, there is no need to do the following operation, just
+    // skip it.
     if (lower_left->get_index().first <= buffer.get_index().first &&
         lower_left->get_index().second >= buffer.get_index().second) {
         return;
@@ -59,18 +60,18 @@ void BufferStringList::push_back(const std::string &target, const size_t index, 
     std::string new_string = std::string();
     new_string.reserve(right_index - left_index);
 
-    // if current index is greater than lower_left (which means the left_index is less than current_index.left), than we
+    // if current index is greater than lower_left (which means the left_index is less than current_index.left), then we
     // should add the remaining part of lower_left's sub-string to buffer.
-    // Exp. lower_left = [0, 2], current_index is [1, 3], we should add [0, 1] to new_string.
+    // Example: lower_left = [0, 2], current_index is [1, 3], we should add [0, 1] to new_string.
     if (buffer.get_index().first > left_index) {
         new_string += lower_left->get_string().substr(0, (buffer.get_index().first - left_index));
     }
 
     new_string += buffer.get_string();
-    // Because the final right_index is greater than the following node's left index, we can erase those node directly,
-    // and replace it with target string. But the final right_index is not always greater than the node's right index.
+    // Because the final right_index is greater than the following node's left index, we can erase those nodes directly,
+    // and replace them with target string. But the final right_index is not always greater than the node's right index.
     // Instead, we should extend the new_string to the right nodes and update the right_index.
-    // Exp. [0, 3] [4, 7] [11, 14], while the input is [3, 4]. the final result should be [0 7] instead of [0, 4].
+    // Example: [0, 3] [4, 7] [11, 14], while the input is [3, 4]. the final result should be [0, 7] instead of [0, 4].
     for (auto it = lower_left; it != upper_right;) {
         if (it->get_index().second > right_index) {
             new_string +=
@@ -80,12 +81,12 @@ void BufferStringList::push_back(const std::string &target, const size_t index, 
         _list.erase(it);
         it = next_it;
     }
-    // When the upper_right hit to the list.end(). We will meet two situations. (1). current_right is larger than
-    // upper_right.right. exp: upper_right: [5, 10], current_index: [1, 11], and in this case we do nothing, just append
-    // current string to the end. (2). current_right is less than upper_right's right, than we should add the remaining
-    // part of upper_right's sub-string to buffer. Exp. upper_right = [5, 10], current_index is [1, 9], we should add
-    // [9, 10] to new_string.
-    // We should always try merge upper_right's eof since the upper_right is the last node in the list.
+    // When the upper_right hits the list.end(), we will meet two situations. (1). current_right is larger than
+    // upper_right.right. Example: upper_right: [5, 10], current_index: [1, 11], and in this case we do nothing, just
+    // append current string to the end. (2). current_right is less than upper_right's right, then we should add the
+    // remaining part of upper_right's sub-string to buffer. Example: upper_right = [5, 10], current_index is [1, 9], we
+    // should add [9, 10] to new_string. We should always try to merge upper_right's eof since the upper_right is the
+    // last node in the list.
     if (is_list_end) {
         if (buffer.get_index().second < right_index) {
             new_string += upper_right->get_string().substr(buffer.get_index().second - upper_right->get_index().first,
