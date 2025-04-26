@@ -6,14 +6,15 @@
 
 namespace sponge {
 
-BufferString::BufferString(const size_t index, std::string &&target) {
+BufferString::BufferString(const size_t index, std::string &&target, bool eof) : _eof(eof) {
     _index = std::make_pair(index, index + target.size());
     _target = std::make_shared<std::string>(std::move(target));
 }
 
-void BufferStringList::push_back(const std::string &target, const size_t index) {
+void BufferStringList::push_back(const std::string &target, const size_t index, const bool eof) {
+    bool final_eof = eof;
     std::string target_ref = target;
-    BufferString buffer = BufferString(index, std::move(target_ref));
+    BufferString buffer = BufferString(index, std::move(target_ref), final_eof);
     auto lower_left = std::lower_bound(
         _list.begin(), _list.end(), buffer.get_index().first, [](const BufferString &buff, const size_t key) {
             return key > buff.get_index().second;
@@ -40,15 +41,13 @@ void BufferStringList::push_back(const std::string &target, const size_t index) 
 
     // try merged.
     size_t left_index = std::min(lower_left->get_index().first, buffer.get_index().first);
-    size_t right_index = buffer.get_index().second;
 
     // For upper_right, if original upper_right is equal to list.end(), which means the list doesn't have any left_index
     // greater than current_right. In this case, current_right is greater than upper_right's left. So we should select
     // the maximum of upper_right's right and current_right as the maximun index.
     // Exp. Upper_right: [5, 10] current_index [3, 9], 9 is greater the 5, so the right_index should be max(10, 9) = 10.
-    if (is_list_end) {
-        right_index = std::max(upper_right->get_index().second, buffer.get_index().second);
-    }
+    size_t right_index =
+        !is_list_end ? buffer.get_index().second : std::max(upper_right->get_index().second, buffer.get_index().second);
 
     // If current range is totally inside the lower_left rage, there is no need to do the following operation, just skip
     // it.
@@ -81,17 +80,23 @@ void BufferStringList::push_back(const std::string &target, const size_t index) 
         _list.erase(it);
         it = next_it;
     }
-    // if current index is less than upper_right (which means the right_index is greater than current_index.right), than
-    // we should add the remaining part of upper_right's sub-string to buffer.
-    // Exp. upper_right = [5, 10], current_index is [1, 9], we should add [9, 10] to new_string.
-    if (buffer.get_index().second < right_index) {
-        new_string += upper_right->get_string().substr(buffer.get_index().second - upper_right->get_index().first,
-                                                       right_index - buffer.get_index().second);
-    }
-    _list.insert(upper_right, BufferString(left_index, std::move(new_string)));
+    // When the upper_right hit to the list.end(). We will meet two situations. (1). current_right is larger than
+    // upper_right.right. exp: upper_right: [5, 10], current_index: [1, 11], and in this case we do nothing, just append
+    // current string to the end. (2). current_right is less than upper_right's right, than we should add the remaining
+    // part of upper_right's sub-string to buffer. Exp. upper_right = [5, 10], current_index is [1, 9], we should add
+    // [9, 10] to new_string.
+    // We should always try merge upper_right's eof since the upper_right is the last node in the list.
     if (is_list_end) {
+        if (buffer.get_index().second < right_index) {
+            new_string += upper_right->get_string().substr(buffer.get_index().second - upper_right->get_index().first,
+                                                           right_index - buffer.get_index().second);
+        }
+        final_eof |= upper_right->eof();
+        _list.insert(upper_right, BufferString(left_index, std::move(new_string), final_eof));
         _list.erase(upper_right);
+        return;
     }
+    _list.insert(upper_right, BufferString(left_index, std::move(new_string), final_eof));
     return;
 }
 
@@ -123,11 +128,37 @@ std::string BufferStringList::get_buffer(const size_t size, const bool should_po
         return result;
     } else {
         std::string result = std::string(result_view.substr(0, size));
-        std::string remaining = std::string(result_view.substr(size, result_view.size() - size));
-        BufferString remaining_buffer = BufferString(_list.front().get_index().first + size, std::move(remaining));
         if (should_pop) {
+            std::string remaining = std::string(result_view.substr(size, result_view.size() - size));
+            BufferString remaining_buffer = BufferString(_list.front().get_index().first + size, std::move(remaining));
             _list.pop_front();
             _list.push_back(remaining_buffer);
+        }
+        return result;
+    }
+    return {};
+}
+
+BufferString BufferStringList::get_buffer_string(const size_t size, const bool should_pop) {
+    if (_list.empty()) {
+        return {};
+    }
+    BufferString buffer = _list.front();
+    if (size >= buffer.size()) {
+        if (should_pop) {
+            _list.pop_front();
+        }
+        return buffer;
+    } else {
+        BufferString result =
+            BufferString(buffer.get_index().first, std::string(buffer.get_string().substr(0, size)), 0);
+
+        if (should_pop) {
+            BufferString remaining = BufferString(buffer.get_index().first + size,
+                                                  std::string(buffer.get_string().substr(size, buffer.size() - size)),
+                                                  buffer.eof());
+            _list.pop_front();
+            _list.push_back(remaining);
         }
         return result;
     }
@@ -137,5 +168,9 @@ std::string BufferStringList::get_buffer(const size_t size, const bool should_po
 std::string BufferStringList::pop_up_buffer(const size_t size) { return get_buffer(size, 1); }
 
 std::string BufferStringList::peek_buffer(const size_t size) { return get_buffer(size); }
+
+BufferString BufferStringList::pop_up_buffer_string(const size_t size) { return get_buffer_string(size, 1); }
+
+BufferString BufferStringList::peek_buffer_string(const size_t size) { return get_buffer_string(size); }
 
 }  // namespace sponge

@@ -234,19 +234,107 @@ void test_merge_all_time() {
     BufferStringList buffer_list = BufferStringList();
     string str = "abcdefghijklmnopqrstuvwxyz";
     // insert "abc" [0, 3]
-    buffer_list.push_back(str.substr(0, 3), 1);
+    buffer_list.push_back(str.substr(0, 3), 0);
     IS_TRUE(buffer_list.peek_buffer(), "abc");
     IS_TRUE(buffer_list.size(), 3u);
 
     // insert "abcdef" [0, 6]
-    buffer_list.push_back(str.substr(0, 6), 1);
+    buffer_list.push_back(str.substr(0, 6), 0);
     IS_TRUE(buffer_list.peek_buffer(), "abcdef");
     IS_TRUE(buffer_list.size(), 6u);
 
     // insert "abcdefghijklmnopqrstuvwxyz" [0, 24]
-    buffer_list.push_back(str.substr(0, 24), 1);
+    buffer_list.push_back(str.substr(0, 24), 0);
     IS_TRUE(buffer_list.peek_buffer(), "abcdefghijklmnopqrstuvwxyz");
     IS_TRUE(buffer_list.size(), 24u);
+}
+
+void test_merge_internal() {
+    BufferStringList buffer_list = BufferStringList();
+    string str = "abcdefghijklmnopqrstuvwxyz";
+    // insert "ab" [0, 2]
+    buffer_list.push_back(str.substr(0, 2), 0);
+    IS_TRUE(buffer_list.peek_buffer(), "ab");
+    IS_TRUE(buffer_list.size(), 2u);
+
+    // insert "hi" [7, 9]
+    buffer_list.push_back(str.substr(7, 2), 7);
+    IS_TRUE(buffer_list.peek_buffer(), "ab");
+    IS_TRUE(buffer_list.size(), 4u);
+
+    // insert "efghijk" [4, 11]
+    buffer_list.push_back(str.substr(4, 7), 4);
+    IS_TRUE(buffer_list.peek_buffer(), "ab");
+    IS_TRUE(buffer_list.size(), 9u);
+}
+
+void test_eof_test() {
+    BufferStringList buffer_list = BufferStringList();
+    string str = "abcdefghijklmnopqrstuvwxyz";
+    // insert "ab" [0, 2]
+    buffer_list.push_back(str.substr(0, 2), 0);
+    IS_TRUE(buffer_list.peek_buffer(), "ab");
+    IS_TRUE(buffer_list.peek_buffer_string().eof(), 0);
+    IS_TRUE(buffer_list.size(), 2u);
+
+    // insert "hi" [7, 9]
+    buffer_list.push_back(str.substr(7, 2), 7, 1);
+    IS_TRUE(buffer_list.peek_buffer(), "ab");
+    IS_TRUE(buffer_list.peek_buffer_string().eof(), 0);
+    IS_TRUE(buffer_list.size(), 4u);
+
+    // insert "efghijk" [4, 9]
+    buffer_list.push_back(str.substr(4, 7), 4);
+    IS_TRUE(buffer_list.peek_buffer(), "ab");
+    IS_TRUE(buffer_list.peek_buffer_string().eof(), 0);
+    IS_TRUE(buffer_list.size(), 9u);
+
+    // insert "cd"
+    buffer_list.push_back(str.substr(2, 2), 2);
+    IS_TRUE(buffer_list.peek_buffer(), "abcdefghijk");
+    IS_TRUE(buffer_list.peek_buffer_string().eof(), 1);
+    for (int i = 0; i < 11; i++) {
+        IS_TRUE(buffer_list.peek_buffer_string(i).eof(), false);
+    }
+    IS_TRUE(buffer_list.peek_buffer_string(11).eof(), true);
+    IS_TRUE(buffer_list.size(), 11u);
+    IS_TRUE(buffer_list.empty(), false);
+
+    // test pop_string
+    for (int i = 0; i < 10; i++) {
+        BufferString buffer = buffer_list.pop_up_buffer_string(1);
+        IS_TRUE(buffer.eof(), false);
+        IS_TRUE(buffer.get_string(), str.substr(i, 1));
+        IS_TRUE(buffer_list.empty(), false);
+    }
+    BufferString buffer = buffer_list.pop_up_buffer_string(1);
+    IS_TRUE(buffer.eof(), true);
+    IS_TRUE(buffer.get_string(), str.substr(10, 1));
+    IS_TRUE(buffer_list.empty(), true);
+}
+
+void test_push_front() {
+    BufferStringList buffer_list = BufferStringList();
+    string str = "abcdefghijklmnopqrstuvwxyz";
+    // insert "stu" [18, 21]
+    buffer_list.push_back(str.substr(18, 3), 18);
+    IS_TRUE(buffer_list.peek_buffer(), "stu");
+    IS_TRUE(buffer_list.size(), 3u);
+
+    // insert "mno" [12, 15]
+    buffer_list.push_back(str.substr(12, 3), 12);
+    IS_TRUE(buffer_list.peek_buffer(), "mno");
+    IS_TRUE(buffer_list.size(), 6u);
+
+    // insert "ghi" [6, 9]
+    buffer_list.push_back(str.substr(6, 3), 6);
+    IS_TRUE(buffer_list.peek_buffer(), "ghi");
+    IS_TRUE(buffer_list.size(), 9u);
+
+    // insert "abc" [0, 3]
+    buffer_list.push_back(str.substr(0, 3), 0);
+    IS_TRUE(buffer_list.peek_buffer(), "abc");
+    IS_TRUE(buffer_list.size(), 12u);
 }
 
 void test_popup_size() {
@@ -285,6 +373,9 @@ int main() {
         test_merge_several3();
         test_merge_several4();
         test_popup_size();
+        test_merge_internal();
+        test_eof_test();
+        test_push_front();
         std::cout << "All tests passed!" << std::endl;
     } catch (const std::exception &e) {
         std::cerr << e.what() << '\n';
