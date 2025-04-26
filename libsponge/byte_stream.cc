@@ -10,6 +10,10 @@
 using namespace std;
 
 size_t ByteStream::write(const string &data) {
+    // if data is empty, just skip it don't push it input the buffer.
+    if (data.empty()) {
+        return 0;
+    }
     size_t written_size = 0;
     size_t capacity = remaining_capacity();
     written_size = data.size() > capacity ? capacity : data.size();
