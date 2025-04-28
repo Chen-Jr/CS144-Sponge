@@ -56,7 +56,7 @@ const std::string BufferList::peek_output(const size_t size) const {
 void BufferList::remove_prefix(size_t &size) {
     while (size > 0) {
         if (_bufferList.empty()) {
-            throw std::out_of_range("BufferLIst::remove_prefix");
+            throw std::out_of_range("BufferLIst::remove_prefix(Nothing to remove)");
         }
         if (_bufferList.front().size() <= size) {
             size -= _bufferList.front().size();

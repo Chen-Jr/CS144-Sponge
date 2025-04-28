@@ -17,6 +17,7 @@ class StreamReassembler {
     uint64_t _top_pointer{};
     ByteStream _output;  //!< The reassembled in-order byte stream
     size_t _capacity;    //!< The maximum number of bytes
+    sponge::BufferStringList _buffer_list = {};
 
   public:
     //! \brief Construct a `StreamReassembler` that will store up to `capacity` bytes.
@@ -51,6 +52,9 @@ class StreamReassembler {
     bool empty() const;
 
     size_t current_capactiy() const;
+
+    uint64_t top_pointer() const { return _top_pointer; };
+    void set_top_pointer(uint64_t ptr) { _top_pointer = ptr; }
 };
 
 #endif  // SPONGE_LIBSPONGE_STREAM_REASSEMBLER_HH

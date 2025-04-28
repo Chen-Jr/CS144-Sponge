@@ -14,31 +14,31 @@ StreamReassembler::StreamReassembler(const size_t capacity) : _output(capacity),
 //! \details This function accepts a substring (aka a segment) of bytes,
 //! possibly out-of-order, from the logical stream, and assembles any newly
 //! contiguous substrings and writes them into the output stream in order.
-void StreamReassembler::push_substring(const string &data, const size_t index, const bool eof) {
-    std::tuple<std::string, size_t, bool> data_ref = {data, index, eof};
+void StreamReassembler::push_substring(const string &data, const uint64_t index, const bool eof) {
+    std::string data_ref = data;
+    uint64_t index_ref = index;
+    bool eof_ref = eof;
     // check duplicate.
-    if (std::get<1>(data_ref) < _top_pointer) {
-        if (std::get<1>(data_ref) + std::get<0>(data_ref).size() < _top_pointer) {
+    if (index_ref < _top_pointer) {
+        if (index_ref + data_ref.size() < _top_pointer) {
             // all the string is duplicate, just drop it all.
             return;
         }
-        std::get<0>(data_ref) =
-            std::get<0>(data_ref).substr(_top_pointer - std::get<1>(data_ref),
-                                         std::get<0>(data_ref).size() - (_top_pointer - std::get<1>(data_ref)));
-        std::get<1>(data_ref) = _top_pointer;
+        data_ref = data_ref.substr(_top_pointer - index_ref, data_ref.size() - (_top_pointer - index_ref));
+        index_ref = _top_pointer;
     }
 
     // check overall capacity.
-    if (std::get<0>(data_ref).size() > current_capactiy()) {
-        if (std::get<2>(data_ref) > current_capactiy()) {
+    if (data_ref.size() > current_capactiy()) {
+        if (eof_ref > current_capactiy()) {
             return;
         }
         // assin to string_ref;
-        std::get<0>(data_ref) = std::get<0>(data_ref).substr(0, current_capactiy());
-        std::get<2>(data_ref) = 0;
+        data_ref = data_ref.substr(0, current_capactiy());
+        eof_ref = 0;
     }
 
-    _buffer_list.push_back(std::get<0>(data_ref), std::get<1>(data_ref), std::get<2>(data_ref));
+    _buffer_list.push_back(data_ref, index_ref, eof_ref);
 
     if (_top_pointer != _buffer_list.top_index()) {
         return;
@@ -51,6 +51,7 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
     if (buffer_string.eof()) {
         _output.end_input();
     }
+    return;
 }
 
 size_t StreamReassembler::unassembled_bytes() const { return _buffer_list.size(); }
