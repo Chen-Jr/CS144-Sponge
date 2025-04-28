@@ -1,3 +1,4 @@
+#include <deque>
 #include <list>
 #include <memory>
 #include <string>
@@ -21,7 +22,8 @@ class BufferString {
 
 class BufferStringList {
   private:
-    std::list<BufferString> _list{};
+    std::deque<BufferString> _list{};
+
     std::string get_buffer(const size_t size, const bool should_pop = 0);
     BufferString get_buffer_string(const size_t size, const bool should_pop = 0);
 

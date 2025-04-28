@@ -1,8 +1,6 @@
 #include "buffer_string.hh"
 
 #include <algorithm>
-#include <iostream>
-#include <vector>
 
 namespace sponge {
 
@@ -78,7 +76,6 @@ void BufferStringList::push_back(const std::string &target, const uint64_t index
                 it->get_string().substr(right_index - it->get_index().first, it->get_index().second - right_index);
         }
         auto next_it = std::next(it);
-        _list.erase(it);
         it = next_it;
     }
     // When the upper_right hits the list.end(), we will meet two situations. (1). current_right is larger than
@@ -93,11 +90,15 @@ void BufferStringList::push_back(const std::string &target, const uint64_t index
                                                            right_index - buffer.get_index().second);
         }
         final_eof |= upper_right->eof();
-        _list.insert(upper_right, BufferString(left_index, std::move(new_string), final_eof));
-        _list.erase(upper_right);
+        auto upper_index = upper_right - _list.begin();
+        auto lower_index = lower_left - _list.begin();
+        _list[upper_index] = BufferString(left_index, std::move(new_string), final_eof);
+        _list.erase((_list.begin() + lower_index), _list.begin() + upper_index);
         return;
     }
-    _list.insert(upper_right, BufferString(left_index, std::move(new_string), final_eof));
+    auto lower_index = lower_left - _list.begin();
+    _list[lower_index] = BufferString(left_index, std::move(new_string), final_eof);
+    _list.erase((_list.begin() + lower_index + 1), upper_right);
     return;
 }
 
