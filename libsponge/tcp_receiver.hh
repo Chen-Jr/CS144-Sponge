@@ -14,11 +14,16 @@
 //! the acknowledgment number and window size to advertise back to the
 //! remote TCPSender.
 class TCPReceiver {
+  private:
     //! Our data structure for re-assembling bytes.
     StreamReassembler _reassembler;
 
     //! The maximum number of bytes we'll store.
     size_t _capacity;
+
+    bool _syn_state = 0;
+    std::optional<WrappingInt32> _isn = {};
+    std::optional<WrappingInt32> _fsn = {};
 
   public:
     //! \brief Construct a TCP receiver
