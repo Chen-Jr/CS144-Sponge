@@ -14,9 +14,7 @@
 class StreamReassembler {
   private:
     // Your code here -- add private members as necessary.
-
-    sponge::BufferStringList _buffer_list{};
-    size_t _top_pointer{};
+    uint64_t _top_pointer{};
     ByteStream _output;  //!< The reassembled in-order byte stream
     size_t _capacity;    //!< The maximum number of bytes
 

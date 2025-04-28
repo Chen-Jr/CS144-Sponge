@@ -6,22 +6,22 @@
 
 namespace sponge {
 
-BufferString::BufferString(const size_t index, std::string &&target, bool eof) : _eof(eof) {
+BufferString::BufferString(const uint64_t index, std::string &&target, bool eof) : _eof(eof) {
     _index = std::make_pair(index, index + target.size());
     _target = std::make_shared<std::string>(std::move(target));
 }
 
-void BufferStringList::push_back(const std::string &target, const size_t index, const bool eof) {
+void BufferStringList::push_back(const std::string &target, const uint64_t index, const bool eof) {
     bool final_eof = eof;
     std::string target_ref = target;
     BufferString buffer = BufferString(index, std::move(target_ref), final_eof);
     auto lower_left = std::lower_bound(
-        _list.begin(), _list.end(), buffer.get_index().first, [](const BufferString &buff, const size_t key) {
+        _list.begin(), _list.end(), buffer.get_index().first, [](const BufferString &buff, const uint64_t key) {
             return key > buff.get_index().second;
         });
 
     auto upper_right = std::upper_bound(
-        _list.begin(), _list.end(), buffer.get_index().second, [](const size_t key, const BufferString &buff) {
+        _list.begin(), _list.end(), buffer.get_index().second, [](const uint64_t key, const BufferString &buff) {
             return key < buff.get_index().first;
         });
 
@@ -109,7 +109,7 @@ size_t BufferStringList::size() const {
     return size;
 }
 
-size_t BufferStringList::top_index() const {
+uint64_t BufferStringList::top_index() const {
     if (_list.empty()) {
         return 0;
     }
