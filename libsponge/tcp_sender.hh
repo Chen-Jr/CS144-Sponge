@@ -9,6 +9,21 @@
 #include <functional>
 #include <queue>
 
+class TCPSenderSegment {
+    std::shared_ptr<TCPSegment> _seg_ref{};
+    size_t _rto = 0;
+    size_t _time = 0;
+
+  public:
+    TCPSenderSegment(TCPSegment &&seg, size_t rto = 0, size_t time = 0)
+        : _seg_ref(std::make_shared<TCPSegment>(std::move(seg))), _rto(rto), _time(time){};
+    std::shared_ptr<TCPSegment> seg_ref() { return _seg_ref; }
+    size_t &time() { return _time; }
+    size_t &rot() { return _rto; }
+    WrappingInt32 seqno() { return _seg_ref->header().seqno; }
+    TCPSegment &seg() { return *_seg_ref; }
+};
+
 //! \brief The "sender" part of a TCP implementation.
 
 //! Accepts a ByteStream, divides it up into segments and sends the
@@ -28,6 +43,16 @@ class TCPSender {
 
     //! outgoing stream of bytes that have not yet been sent
     ByteStream _stream;
+
+    bool _is_syn_received = 0;
+    bool _is_fin_received = 0;
+    size_t _last_tick_time = 0;
+    size_t _consecutive_retrans = 0;
+
+    uint32_t _window_size = 1;
+    bool _is_window_zero = 0;
+    uint64_t _byted_in_flight = 0;
+    std::deque<TCPSenderSegment> _seg_queue = {};
 
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
