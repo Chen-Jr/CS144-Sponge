@@ -61,7 +61,14 @@ void TCPSender::fill_window() {
     }
     size_t index = 0;
     // The payload size should under TCPConfig::MAX_PAYLOAD_SIZE. Otherwise, we should split it into different part.
+    bool is_fin = seg.header().fin;
     do {
+        // We should set fin the the last payload!!!
+        if (is_fin && readable_size <= TCPConfig::MAX_PAYLOAD_SIZE) {
+            seg.header().fin = 1;
+        } else if (is_fin && readable_size > TCPConfig::MAX_PAYLOAD_SIZE) {
+            seg.header().fin = 0;
+        }
         // readable_size > TCPConfig::MAX_PAYLOAD_SIZE
         Buffer buffer = Buffer(std::move(buffer_str.substr(index++ * TCPConfig::MAX_PAYLOAD_SIZE,
                                                            std::min(TCPConfig::MAX_PAYLOAD_SIZE, readable_size))));
