@@ -53,8 +53,7 @@ class StreamReassembler {
 
     size_t current_capactiy() const;
 
-    uint64_t top_pointer() const { return _top_pointer; };
-    void set_top_pointer(uint64_t ptr) { _top_pointer = ptr; }
+    uint64_t &top_pointer() { return _top_pointer; };
 };
 
 #endif  // SPONGE_LIBSPONGE_STREAM_REASSEMBLER_HH

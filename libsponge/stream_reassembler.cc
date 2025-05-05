@@ -28,11 +28,13 @@ void StreamReassembler::push_substring(const string &data, const uint64_t index,
         index_ref = _top_pointer;
     }
 
+    // If current index is beyond reassmebler's window, then skip it first.
+    if (index_ref - _top_pointer + 1 > current_capactiy()) {
+        return;
+    }
+
     // check overall capacity.
     if (data_ref.size() > current_capactiy()) {
-        if (eof_ref > current_capactiy()) {
-            return;
-        }
         // assin to string_ref;
         data_ref = data_ref.substr(0, current_capactiy());
         eof_ref = 0;
