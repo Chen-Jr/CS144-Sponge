@@ -21,7 +21,6 @@ class TCPReceiver {
     //! The maximum number of bytes we'll store.
     size_t _capacity;
 
-    bool _syn_state = 0;
     std::optional<WrappingInt32> _isn = {};
     std::optional<WrappingInt32> _fsn = {};
 
@@ -41,6 +40,10 @@ class TCPReceiver {
     //! This is the beginning of the receiver's window, or in other words, the sequence number
     //! of the first byte in the stream that the receiver hasn't received.
     std::optional<WrappingInt32> ackno() const;
+
+    std::optional<WrappingInt32> fsn() const { return _fsn; };
+
+    std::optional<WrappingInt32> isn() const { return _isn; };
 
     //! \brief The window size that should be sent to the peer
     //!

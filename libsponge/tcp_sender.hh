@@ -111,6 +111,11 @@ class TCPSender {
 
     //! \brief relative seqno for the next byte to be sent
     WrappingInt32 next_seqno() const { return wrap(_next_seqno, _isn); }
+
+    bool is_syn_received() const { return _is_syn_received; }
+
+    bool is_fin_received() const { return _is_fin_received; }
+
     //!@}
 };
 

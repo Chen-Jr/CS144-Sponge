@@ -16,10 +16,10 @@ void push_back_wrap_string(const TCPSegment &seg,
                            StreamReassembler &reassembler,
                            bool eof = 0) {
     uint64_t index = unwrap(seg.header().seqno, isn, reassembler.top_pointer());
-    if (seg.header().syn && seg.payload().size() == 0) {
+    if (seg.header().syn && data.size() == 0) {
         // If SYN package doesn't carry any data, we should manually move the index pointer to the next.
         reassembler.push_substring(data, index, eof);
-        reassembler.set_top_pointer(index + 1);
+        reassembler.top_pointer() = index + 1;
     } else {
         reassembler.push_substring(data, index, eof);
     }
