@@ -8,6 +8,23 @@
 #include <optional>
 #include <queue>
 
+class IP2EthernetCache {
+  private:
+    // ip -> ethernet
+    std::unordered_map<uint32_t, std::shared_ptr<EthernetAddress>> _ip_mac_cache{};
+    // queue for ip cache.
+    std::deque<std::pair<size_t, uint32_t>> _cach_expire_queue{};
+
+  public:
+    IP2EthernetCache() = default;
+    void set_cache(const uint32_t ip_address,
+                   EthernetAddress &ether_adderss,
+                   const size_t ms_since_last_tick = 0,
+                   const size_t expire_time = 30 * 1000);
+    std::optional<std::shared_ptr<EthernetAddress>> get_cache(const uint32_t ip_address);
+    void try_clean_expire_cache(size_t current_time);
+};
+
 //! \brief A "network interface" that connects IP (the internet layer, or network layer)
 //! with Ethernet (the network access layer, or link layer).
 
@@ -29,6 +46,8 @@
 //! the network interface passes it up the stack. If it's an ARP
 //! request or reply, the network interface processes the frame
 //! and learns or replies as necessary.
+
+typedef std::pair<size_t, std::shared_ptr<InternetDatagram>> ip_with_time;
 class NetworkInterface {
   private:
     //! Ethernet (known as hardware, network-access-layer, or link-layer) address of the interface
@@ -39,6 +58,16 @@ class NetworkInterface {
 
     //! outbound queue of Ethernet frames that the NetworkInterface wants sent
     std::queue<EthernetFrame> _frames_out{};
+
+    std::unordered_map<uint32_t, ip_with_time> _arp_ip_queue{};
+
+    IP2EthernetCache _ip_mac_map{};
+
+    size_t _ms_since_last_tick = 0;
+
+    size_t _expire_time{30 * 1000};
+
+    void _try_set_cache_if_need(const size_t &ip_address, EthernetAddress &ether_address);
 
   public:
     //! \brief Construct a network interface with given Ethernet (network-access-layer) and IP (internet-layer) addresses

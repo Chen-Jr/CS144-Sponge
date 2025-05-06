@@ -8,7 +8,7 @@
 using namespace std;
 
 void get_URL(const string &host, const string &path) {
-    CS144TCPSocket socket = CS144TCPSocket();
+    FullStackSocket socket = FullStackSocket();
     Address address = Address(host, "http");
     socket.connect(address);
     std::cout << "Connnect to Address " << host << " success!" << std::endl;
