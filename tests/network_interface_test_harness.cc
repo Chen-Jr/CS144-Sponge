@@ -54,8 +54,7 @@ NetworkInterfaceTestHarness::NetworkInterfaceTestHarness(const std::string &test
                                                          const Address &ip_address)
     : _test_name(test_name), _interface(ethernet_address, ip_address) {
     std::ostringstream ss;
-    ss << "Initialized with ("
-       << "ethernet_address=" << to_string(ethernet_address) << ", "
+    ss << "Initialized with (" << "ethernet_address=" << to_string(ethernet_address) << ", "
        << "ip_address=" << ip_address.ip() << ")";
     _steps_executed.emplace_back(ss.str());
 }

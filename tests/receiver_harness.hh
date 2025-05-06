@@ -300,8 +300,7 @@ class TCPReceiverTestHarness {
   public:
     TCPReceiverTestHarness(size_t capacity) : receiver(capacity), steps_executed() {
         std::ostringstream ss;
-        ss << "Initialized with ("
-           << "capacity=" << capacity << ")";
+        ss << "Initialized with (" << "capacity=" << capacity << ")";
         steps_executed.emplace_back(ss.str());
     }
     void execute(const ReceiverTestStep &step) {

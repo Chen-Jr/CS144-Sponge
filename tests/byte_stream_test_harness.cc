@@ -48,8 +48,7 @@ ByteStreamAction::~ByteStreamAction() {}
 ByteStreamTestHarness::ByteStreamTestHarness(const std::string &test_name, const size_t capacity)
     : _test_name(test_name), _byte_stream(capacity) {
     std::ostringstream ss;
-    ss << "Initialized with ("
-       << "capacity=" << capacity << ")";
+    ss << "Initialized with (" << "capacity=" << capacity << ")";
     _steps_executed.emplace_back(ss.str());
 }
 
